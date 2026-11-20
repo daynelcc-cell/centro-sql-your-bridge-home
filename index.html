@@ -1,0 +1,348 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10213d">
+<title>Centro SQL SHOPBRIDGE</title>
+<style>
+:root{
+ --navy:#10213d;--blue:#1769ff;--bg:#f2f5fa;
+ --white:#fff;--text:#17243b;--muted:#718096;
+ --green:#159b68;--red:#d94343;--border:#e3e9f2;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--text)}
+header{background:linear-gradient(120deg,#10213d,#174b91);color:white;padding:22px 16px}
+header h1{margin:0;font-size:23px}
+header p{margin:8px 0 0;color:#d5e3ff;font-size:13px}
+.container{max-width:1100px;margin:auto;padding:15px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.stat{background:white;padding:15px;border-radius:13px;border:1px solid var(--border)}
+.stat strong{display:block;font-size:23px;color:var(--blue)}
+.stat span{font-size:12px;color:var(--muted)}
+.panel{background:white;border:1px solid var(--border);border-radius:15px;padding:16px;margin:13px 0}
+h2{font-size:17px;margin:0 0 13px}
+h3{font-size:14px;margin:0 0 8px}
+input,select,textarea{
+ width:100%;padding:12px;border:1px solid #d7dfeb;
+ border-radius:9px;font-size:14px;background:white;color:var(--text);
+ margin:5px 0 10px;
+}
+textarea{min-height:230px;font-family:monospace;line-height:1.5;resize:vertical}
+button{
+ border:0;border-radius:9px;padding:11px 14px;
+ font-weight:bold;font-size:13px;cursor:pointer;margin:3px;
+ background:#eaf0fa;color:#18345d;
+}
+button.primary{background:var(--blue);color:white}
+button.green{background:var(--green);color:white}
+button.red{background:#fff0f0;color:var(--red)}
+button.dark{background:var(--navy);color:white}
+button:active{transform:scale(.98)}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.code-card{border:1px solid var(--border);padding:13px;border-radius:11px;margin:9px 0}
+.code-card p{font-size:12px;color:var(--muted);margin:5px 0}
+.tag{font-size:11px;background:#eaf1ff;color:#2058b2;padding:5px 8px;border-radius:20px}
+.small{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:7px;overflow:auto;padding:5px 0 12px}
+.tabs button{white-space:nowrap}
+.tabs button.active{background:var(--navy);color:white}
+.hidden{display:none!important}
+.notice{padding:12px;background:#fff7df;border:1px solid #f0dda2;border-radius:10px;font-size:12px;line-height:1.5}
+.success{padding:12px;background:#e8f8f0;border:1px solid #b8e6cf;border-radius:10px;font-size:13px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+</style>
+</head>
+<body>
+
+<header>
+ <h1>🗄️ CENTRO SQL SHOPBRIDGE</h1>
+ <p>Tu centro de control para organizar Supabase y tus proyectos</p>
+</header>
+
+<div class="container">
+
+<div class="stats">
+ <div class="stat"><strong id="totalCodes">0</strong><span>Códigos guardados</span></div>
+ <div class="stat"><strong id="totalHistory">0</strong><span>Ejecutados</span></div>
+ <div class="stat"><strong id="draftStatus">Activo</strong><span>Editor</span></div>
+</div>
+
+<div class="tabs">
+ <button class="active" onclick="showTab('editor',this)">✏️ Editor SQL</button>
+ <button onclick="showTab('library',this)">📚 Biblioteca</button>
+ <button onclick="showTab('history',this)">🕘 Historial</button>
+ <button onclick="showTab('backup',this)">💾 Copias</button>
+</div>
+
+<section id="editor" class="tab">
+ <div class="panel">
+  <h2>Editor de códigos SQL</h2>
+  <label class="small">Nombre del código</label>
+  <input id="sqlName" placeholder="Ej. Crear tablas de monedas">
+  <label class="small">Proyecto</label>
+  <select id="sqlProject">
+   <option>YOUR BRIDGE HOME</option>
+   <option>SHOPBRIDGE</option>
+   <option>Compartido</option>
+  </select>
+  <label class="small">Categoría</label>
+  <select id="sqlCategory">
+   <option>Instalación</option>
+   <option>Tablas</option>
+   <option>Monedas y tasas</option>
+   <option>Funciones</option>
+   <option>Seguridad</option>
+   <option>Actualización</option>
+   <option>Otros</option>
+  </select>
+  <label class="small">Código SQL</label>
+  <textarea id="sqlEditor" spellcheck="false" placeholder="Pega aquí tu código SQL..."></textarea>
+  <div class="row">
+   <button class="primary" onclick="copyEditor()">📋 Copiar SQL</button>
+   <button onclick="saveCode()">💾 Guardar en biblioteca</button>
+  </div>
+  <div class="row">
+   <button class="green" onclick="markExecuted()">✓ Ejecutado correctamente</button>
+   <button class="red" onclick="clearEditor()">Limpiar editor</button>
+  </div>
+  <p class="small">El editor guarda automáticamente tu borrador en este dispositivo.</p>
+ </div>
+ <div class="notice">
+  <b>Importante:</b> este programa no ejecuta SQL directamente. Copia el código, ejecútalo en Supabase y revisa que aparezca el mensaje de éxito. Solo entonces pulsa «Ejecutado correctamente». Limpiar el editor no borra nada de Supabase.
+ </div>
+</section>
+
+<section id="library" class="tab hidden">
+ <div class="panel">
+  <h2>📚 Biblioteca de códigos</h2>
+  <input id="searchCode" placeholder="Buscar por nombre..." oninput="renderLibrary()">
+  <select id="filterProject" onchange="renderLibrary()">
+   <option value="">Todos los proyectos</option>
+   <option>YOUR BRIDGE HOME</option>
+   <option>SHOPBRIDGE</option>
+   <option>Compartido</option>
+  </select>
+  <div id="libraryList"></div>
+ </div>
+</section>
+
+<section id="history" class="tab hidden">
+ <div class="panel">
+  <h2>🕘 Historial de ejecuciones</h2>
+  <p class="small">Aquí se conservan los códigos que confirmaste como ejecutados.</p>
+  <div id="historyList"></div>
+ </div>
+</section>
+
+<section id="backup" class="tab hidden">
+ <div class="panel">
+  <h2>💾 Copias de seguridad</h2>
+  <p>Exporta tu biblioteca y tu historial para conservarlos o trasladarlos a otro teléfono.</p>
+  <button class="primary" onclick="exportBackup()">⬇️ Descargar copia de seguridad</button>
+  <hr style="border:0;border-top:1px solid #eee;margin:18px 0">
+  <h3>Restaurar una copia</h3>
+  <input type="file" id="importFile" accept=".json,application/json">
+  <button class="green" onclick="importBackup()">Restaurar copia</button>
+  <div class="notice">La información se guarda en el almacenamiento local del navegador. Si borras los datos de la aplicación o cambias de dispositivo, utiliza una copia de seguridad.</div>
+ </div>
+</section>
+
+<footer>
+ CENTRO SQL SHOPBRIDGE · Herramienta administrativa de Daynel
+</footer>
+</div>
+
+<script>
+const KEY_CODES="centro_sql_codes_v1";
+const KEY_HISTORY="centro_sql_history_v1";
+const KEY_DRAFT="centro_sql_draft_v1";
+
+let codes=read(KEY_CODES,[]);
+let history=read(KEY_HISTORY,[]);
+
+function read(key,fallback){
+ try{return JSON.parse(localStorage.getItem(key))||fallback}
+ catch(e){return fallback}
+}
+function persist(){
+ localStorage.setItem(KEY_CODES,JSON.stringify(codes));
+ localStorage.setItem(KEY_HISTORY,JSON.stringify(history));
+ updateStats();
+}
+function updateStats(){
+ document.getElementById("totalCodes").textContent=codes.length;
+ document.getElementById("totalHistory").textContent=history.length;
+}
+function showTab(id,btn){
+ document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+ btn.classList.add("active");
+ if(id==="library")renderLibrary();
+ if(id==="history")renderHistory();
+}
+function draftSave(){
+ const draft={
+  name:sqlName.value,
+  project:sqlProject.value,
+  category:sqlCategory.value,
+  sql:sqlEditor.value
+ };
+ localStorage.setItem(KEY_DRAFT,JSON.stringify(draft));
+ document.getElementById("draftStatus").textContent="Guardado";
+}
+function loadDraft(){
+ const d=read(KEY_DRAFT,{});
+ sqlName.value=d.name||"";
+ sqlProject.value=d.project||"YOUR BRIDGE HOME";
+ sqlCategory.value=d.category||"Instalación";
+ sqlEditor.value=d.sql||"";
+}
+["sqlName","sqlProject","sqlCategory","sqlEditor"].forEach(id=>{
+ document.getElementById(id).addEventListener("input",draftSave);
+ document.getElementById(id).addEventListener("change",draftSave);
+});
+async function copyText(text){
+ try{
+  await navigator.clipboard.writeText(text);
+  alert("Código copiado correctamente.");
+ }catch(e){
+  const t=document.createElement("textarea");
+  t.value=text;document.body.appendChild(t);
+  t.select();document.execCommand("copy");t.remove();
+  alert("Código copiado.");
+ }
+}
+function copyEditor(){
+ if(!sqlEditor.value.trim())return alert("El editor está vacío.");
+ copyText(sqlEditor.value);
+}
+function saveCode(){
+ const sql=sqlEditor.value.trim();
+ if(!sql)return alert("Primero pega un código SQL.");
+ const item={
+  id:Date.now(),
+  name:sqlName.value.trim()||"Código SQL sin nombre",
+  project:sqlProject.value,
+  category:sqlCategory.value,
+  sql,
+  created:new Date().toISOString()
+ };
+ codes.unshift(item);
+ persist();
+ alert("Código guardado en la biblioteca.");
+ renderLibrary();
+}
+function loadCode(id){
+ const item=codes.find(x=>x.id===id);
+ if(!item)return;
+ sqlName.value=item.name;
+ sqlProject.value=item.project;
+ sqlCategory.value=item.category;
+ sqlEditor.value=item.sql;
+ draftSave();
+ document.querySelector('.tabs button').click();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function deleteCode(id){
+ if(!confirm("¿Eliminar este código de la biblioteca?"))return;
+ codes=codes.filter(x=>x.id!==id);
+ persist();renderLibrary();
+}
+function renderLibrary(){
+ const q=(searchCode.value||"").toLowerCase();
+ const project=filterProject.value||"";
+ const list=codes.filter(x=>
+  (x.name.toLowerCase().includes(q)||x.category.toLowerCase().includes(q))&&
+  (!project||x.project===project)
+ );
+ libraryList.innerHTML=list.length?"":"<p class='small'>Todavía no hay códigos guardados.</p>";
+ list.forEach(x=>{
+  const div=document.createElement("div");
+  div.className="code-card";
+  const title=document.createElement("h3");title.textContent=x.name;
+  const info=document.createElement("p");
+  info.textContent=x.project+" · "+x.category;
+  const tag=document.createElement("span");tag.className="tag";tag.textContent=x.category;
+  const load=document.createElement("button");load.textContent="Abrir en editor";load.onclick=()=>loadCode(x.id);
+  const copy=document.createElement("button");copy.textContent="Copiar";copy.onclick=()=>copyText(x.sql);
+  const del=document.createElement("button");del.className="red";del.textContent="Eliminar";del.onclick=()=>deleteCode(x.id);
+  div.append(title,info,tag,document.createElement("br"),load,copy,del);
+  libraryList.appendChild(div);
+ });
+}
+function markExecuted(){
+ const sql=sqlEditor.value.trim();
+ if(!sql)return alert("No hay código en el editor.");
+ if(!confirm("¿Confirmas que ejecutaste este código en Supabase y que terminó correctamente?"))return;
+ history.unshift({
+  id:Date.now(),
+  name:sqlName.value.trim()||"Código SQL",
+  project:sqlProject.value,
+  category:sqlCategory.value,
+  sql,
+  executed:new Date().toISOString()
+ });
+ persist();
+ sqlEditor.value="";
+ sqlName.value="";
+ draftSave();
+ alert("Registrado en el historial. El editor está limpio.");
+}
+function clearEditor(){
+ if(!sqlEditor.value.trim())return;
+ if(!confirm("¿Limpiar el editor? El código no se borrará de la biblioteca ni de Supabase."))return;
+ sqlEditor.value="";
+ sqlName.value="";
+ draftSave();
+}
+function renderHistory(){
+ historyList.innerHTML="";
+ if(!history.length){
+  historyList.innerHTML="<p class='small'>Todavía no hay ejecuciones registradas.</p>";
+  return;
+ }
+ history.forEach(x=>{
+  const div=document.createElement("div");div.className="code-card";
+  const title=document.createElement("h3");title.textContent="✓ "+x.name;
+  const info=document.createElement("p");
+  info.textContent=x.project+" · "+new Date(x.executed).toLocaleString();
+  const copy=document.createElement("button");copy.textContent="Copiar nuevamente";copy.onclick=()=>copyText(x.sql);
+  const open=document.createElement("button");open.textContent="Abrir en editor";open.onclick=()=>loadCode(x.id);
+  div.append(title,info,copy,open);
+  historyList.appendChild(div);
+ });
+}
+function exportBackup(){
+ const data={version:1,codes,history,created:new Date().toISOString()};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;
+ a.download="centro-sql-respaldo.json";a.click();
+ URL.revokeObjectURL(url);
+}
+function importBackup(){
+ const file=importFile.files[0];
+ if(!file)return alert("Selecciona primero un archivo JSON.");
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const data=JSON.parse(reader.result);
+   if(!Array.isArray(data.codes)||!Array.isArray(data.history))throw Error();
+   if(!confirm("¿Importar esta copia? Se reemplazarán la biblioteca y el historial actuales."))return;
+   codes=data.codes;history=data.history;persist();
+   renderLibrary();renderHistory();
+   alert("Copia restaurada correctamente.");
+  }catch(e){alert("El archivo no parece una copia válida de esta herramienta.");}
+ };
+ reader.readAsText(file);
+}
+loadDraft();
+updateStats();
+</script>
+</body>
+</html>
